@@ -21,31 +21,30 @@ body {
   padding: 12px 18px;
   background: rgba(0,0,0,0.85);
   border-bottom: 2px solid rgb(22, 54, 219);
-  backdrop-filter: blur(10px);
 }
 
 #timerBox {
   padding: 8px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(22, 54, 219, 0.5);
-  background: rgba(22, 54, 219, 0.1);
+  background: rgba(22,54,219,0.1);
+  border: 1px solid rgba(22,54,219,0.5);
   font-weight: bold;
 }
 
-#hudRight { display: flex; gap: 10px; }
+#hudRight {
+  display: flex;
+  gap: 10px;
+}
 
 .teamScore {
   padding: 6px 10px;
   border-radius: 8px;
-  font-size: 16px;
-  border: 1px solid rgba(22,54,219,0.3);
   background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(22,54,219,0.3);
 }
 
 .teamScore.active {
   border: 2px solid #d61e1e;
-  box-shadow: 0 0 12px rgba(214,30,30,0.8);
-  transform: scale(1.08);
 }
 
 /* BOARD */
@@ -54,8 +53,6 @@ body {
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
   padding: 15px;
-  max-width: 1280px;
-  margin: auto;
 }
 
 .card {
@@ -69,7 +66,6 @@ body {
   justify-content: center;
   text-align: center;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 .card.selected {
@@ -83,15 +79,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  z-index: 999;
   background: rgba(0,0,0,0.97);
+  z-index: 999;
+  text-align: center;
 }
 
 #overlayText {
-  font-size: 24px;
+  font-size: 20px;
   margin-bottom: 20px;
-  line-height: 1.4;
   min-height: 200px;
 }
 
@@ -100,11 +95,10 @@ body {
   font-size: 18px;
   border: none;
   border-radius: 10px;
-  cursor: pointer;
   background: rgb(22,54,219);
   color: white;
-  font-weight: bold;
-  position:absolute;
+  cursor: pointer;
+  position: absolute;
   bottom: 25px;
   left: 50%;
   transform: translateX(-50%);
@@ -131,8 +125,10 @@ body {
 <script>
 
 let cards = [];
-let board = document.getElementById("gameBoard");
+let activePairs = [];
+let remainingPool = [];
 
+let board = document.getElementById("gameBoard");
 let overlay = document.getElementById("overlay");
 let overlayText = document.getElementById("overlayText");
 let startBtn = document.getElementById("startBtn");
@@ -142,15 +138,11 @@ let scores = [];
 let currentTeam = 0;
 
 let selectedCards = [];
-let activePairs = [];
-let remainingPool = [];
 
 const MAX_PAIRS = 14;
 
-// ================= GOOGLE SHEET IMPORT =================
+// ================= SHEET IMPORT =================
 function convertSheetUrl(url){
-  if(url.includes("output=csv")) return url;
-
   let match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
   if(!match) return null;
 
@@ -165,114 +157,113 @@ async function loadFromSheet(){
   let url = document.getElementById("sheetInput").value.trim();
   let csvUrl = convertSheetUrl(url);
 
-  if(!csvUrl){
-    overlayText.innerHTML += "<div style='color:red'>Invalid Google Sheets URL</div>";
-    return;
-  }
-
   try {
     let res = await fetch(csvUrl);
     let text = await res.text();
 
     parseCSV(text);
 
-    overlayText.innerHTML += "<div style='color:lime'>Sheet Loaded ✔</div>";
-    startBtn.style.display = "inline-block";
+    if(cards.length === 0){
+      throw new Error("No cards found");
+    }
+
+    overlayText.innerHTML = `
+      <h2 style="color:lime">Sheet Loaded ✔</h2>
+      <p>${cards.length} cards loaded</p>
+      <div id="teamSelect"></div>
+    `;
+
+    showTeamSelection();
 
   } catch(e){
-    overlayText.innerHTML += "<div style='color:red'>Failed to load sheet</div>";
+    overlayText.innerHTML += `<div style="color:red">Failed to load sheet</div>`;
   }
 }
 
-// ================= FIXED CSV PARSER =================
+// ================= CSV =================
 function parseCSV(csv){
   csv = csv.replace(/\r/g,"");
 
-  const rows = csv.trim().split("\n").map(row => {
-    let cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-    return cols ? cols.map(c => c.replace(/"/g,"").trim()) : [];
-  });
+  let rows = csv.trim().split("\n").map(r => r.split(","));
 
   cards = rows
-    .filter(r => r.length >= 2)
-    .map((r, i) => ({
-      id: i + 1,
-      term: r[0],
-      def: r[1],
-      bonus: Number(r[2]) || 1
+    .filter(r => r[0] && r[1])
+    .map((r,i)=>({
+      id:i+1,
+      term:r[0],
+      def:r[1],
+      bonus:Number(r[2])||1
     }));
 
   remainingPool = [...cards];
 }
 
-// ================= GAME INIT =================
-showRules();
+// ================= TEAM SELECTION =================
+function showTeamSelection(){
+  let container = document.getElementById("teamSelect");
 
-function showRules(){
-  overlay.style.display="flex";
+  for(let i=1;i<=5;i++){
+    let btn = document.createElement("button");
+    btn.textContent = i + " Teams";
 
-  overlayText.innerHTML = `
-    <h1>GEOMETRY MATCH</h1>
+    btn.style.margin = "5px";
+    btn.style.padding = "10px";
+    btn.style.border = "none";
+    btn.style.borderRadius = "8px";
+    btn.style.background = "rgb(22,54,219)";
+    btn.style.color = "white";
+    btn.style.cursor = "pointer";
 
-    <p>Paste Google Sheets link:</p>
+    btn.onclick = () => {
+      teamCount = i;
+      startBtn.style.display = "inline-block";
+      highlight(container,i);
+    };
 
-    <input id="sheetInput"
-      style="width:80%;padding:10px;border-radius:8px;border:none;"
-      placeholder="Published Google Sheets URL">
+    container.appendChild(btn);
+  }
+}
 
-    <br><br>
-
-    <button onclick="loadFromSheet()"
-      style="padding:10px 20px;border:none;border-radius:8px;background:#1e90ff;color:white;cursor:pointer;">
-      Load Questions
-    </button>
-
-    <div style="margin-top:10px;font-size:14px;color:#aaa">
-      Make sure sheet is "Publish to web → CSV"
-    </div>
-  `;
-
-  startBtn.style.display = "none";
-  startBtn.textContent = "START GAME";
-  startBtn.onclick = startGame;
+function highlight(container, selected){
+  [...container.children].forEach((b,i)=>{
+    b.style.outline = (i===selected-1)?"3px solid gold":"none";
+  });
 }
 
 // ================= START GAME =================
-function startGame(){
-  if(cards.length === 0){
-    alert("No cards loaded!");
-    return;
-  }
+startBtn.textContent = "START GAME";
+startBtn.style.display = "none";
 
+startBtn.onclick = () => {
   scores = Array(teamCount).fill(0);
   currentTeam = 0;
 
-  overlay.style.display="none";
+  overlay.style.display = "none";
 
   fillBoard();
   renderBoard();
   updateScores();
-}
+};
 
 // ================= BOARD =================
 function fillBoard(){
   activePairs = [];
   remainingPool = [...cards];
 
-  while(activePairs.length < Math.min(MAX_PAIRS, cards.length) && remainingPool.length){
-    let i = Math.floor(Math.random() * remainingPool.length);
+  while(activePairs.length < Math.min(MAX_PAIRS, cards.length)){
+    let i = Math.floor(Math.random()*remainingPool.length);
     activePairs.push(remainingPool.splice(i,1)[0]);
   }
 }
 
 function renderBoard(){
-  board.innerHTML="";
+  board.innerHTML = "";
 
-  let deck=[];
+  let deck = [];
 
   activePairs.forEach(c=>{
-    deck.push({text:c.term, id:c.id, type:"term"});
-    deck.push({text:c.def, id:c.id, type:"def"});
+    deck.push({text:c.term,id:c.id,type:"term"});
+    deck.push({text:c.def,id:c.id,type:"def"});
   });
 
   deck.sort(()=>Math.random()-0.5);
@@ -291,12 +282,6 @@ function renderBoard(){
 
 // ================= GAME LOGIC =================
 function handle(card){
-  if(card.classList.contains("selected")){
-    card.classList.remove("selected");
-    selectedCards = selectedCards.filter(c=>c!==card);
-    return;
-  }
-
   if(selectedCards.length>=2) return;
 
   card.classList.add("selected");
@@ -306,19 +291,16 @@ function handle(card){
 }
 
 function check(){
-  const [a,b] = selectedCards;
+  let [a,b]=selectedCards;
 
-  let match =
-    a.dataset.id === b.dataset.id &&
-    a.dataset.type !== b.dataset.type;
-
-  if(match){
-    scores[currentTeam] += 10;
+  if(a.dataset.id===b.dataset.id && a.dataset.type!==b.dataset.type){
+    scores[currentTeam]+=10;
   }
 
-  selectedCards = [];
+  selectedCards=[];
   renderBoard();
-  currentTeam = (currentTeam + 1) % teamCount;
+
+  currentTeam=(currentTeam+1)%teamCount;
   updateScores();
 }
 
@@ -328,46 +310,35 @@ function updateScores(){
   hud.innerHTML="";
 
   scores.forEach((s,i)=>{
-    let div=document.createElement("div");
-    div.className="teamScore";
-    if(i===currentTeam) div.classList.add("active");
-    div.textContent=`TEAM ${i+1}: ${s}`;
-    hud.appendChild(div);
+    let d=document.createElement("div");
+    d.className="teamScore";
+    if(i===currentTeam) d.classList.add("active");
+    d.textContent=`TEAM ${i+1}: ${s}`;
+    hud.appendChild(d);
   });
 }
-async function loadFromSheet(){
-  let url = document.getElementById("sheetInput").value.trim();
-  let csvUrl = convertSheetUrl(url);
 
-  console.log("FETCHING:", csvUrl);
+// ================= INIT =================
+overlayText.innerHTML = `
+<h1>GEOMETRY MATCH</h1>
 
-  try {
-    let res = await fetch(csvUrl);
+<p>Paste Google Sheets link:</p>
 
-    console.log("STATUS:", res.status);
-    console.log("HEADERS:", [...res.headers.entries()]);
+<input id="sheetInput"
+style="width:80%;padding:10px;border-radius:8px;border:none;"
+placeholder="Published Google Sheets URL">
 
-    let text = await res.text();
+<br><br>
 
-    console.log("RAW RESPONSE (first 500 chars):");
-    console.log(text.slice(0,500));
+<button onclick="loadFromSheet()"
+style="padding:10px 20px;border:none;border-radius:8px;background:#1e90ff;color:white;">
+Load Questions
+</button>
 
-    overlayText.innerHTML += `
-      <div style="color:lime;margin-top:10px;">
-        Check console for output
-      </div>
-    `;
-
-  } catch(err){
-    console.error("FETCH ERROR:", err);
-
-    overlayText.innerHTML += `
-      <div style="color:red;">
-        ❌ FETCH FAILED (see console)
-      </div>
-    `;
-  }
-}
+<div style="margin-top:10px;font-size:13px;color:#aaa">
+Make sure sheet is published as CSV
+</div>
+`;
 
 </script>
 </body>
