@@ -141,6 +141,10 @@ let selectedCards = [];
 
 const MAX_PAIRS = 14;
 
+startBtn.textContent = "START GAME";
+startBtn.style.display = "none";
+startBtn.onclick = startGame;
+
 // ================= SHEET IMPORT =================
 function convertSheetUrl(url){
   let match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
@@ -157,6 +161,11 @@ async function loadFromSheet(){
   let url = document.getElementById("sheetInput").value.trim();
   let csvUrl = convertSheetUrl(url);
 
+  if(!csvUrl){
+    overlayText.innerHTML += "<div style='color:red'>Invalid URL</div>";
+    return;
+  }
+
   try {
     let res = await fetch(csvUrl);
     let text = await res.text();
@@ -164,7 +173,7 @@ async function loadFromSheet(){
     parseCSV(text);
 
     if(cards.length === 0){
-      throw new Error("No cards found");
+      throw new Error("No valid cards found");
     }
 
     overlayText.innerHTML = `
@@ -176,29 +185,54 @@ async function loadFromSheet(){
     showTeamSelection();
 
   } catch(e){
-    overlayText.innerHTML += `<div style="color:red">Failed to load sheet</div>`;
+    overlayText.innerHTML += "<div style='color:red'>Failed to load sheet</div>";
   }
 }
 
-// ================= CSV =================
+// ================= CSV PARSER (FIXED) =================
 function parseCSV(csv){
-  csv = csv.replace(/\r/g,"");
+  csv = csv.replace(/\r/g,"").trim();
 
-  let rows = csv.trim().split("\n").map(r => r.split(","));
+  const rows = csv
+    .split("\n")
+    .map(row => {
+      let cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+      return cols ? cols.map(c => c.replace(/"/g,"").trim()) : [];
+    });
 
-  cards = rows
-    .filter(r => r[0] && r[1])
-    .map((r,i)=>({
-      id:i+1,
-      term:r[0],
-      def:r[1],
-      bonus:Number(r[2])||1
-    }));
+  let cleaned = [];
 
+  let startIndex = 0;
+
+  // skip header row
+  if(rows.length > 0){
+    const first = rows[0].map(v => v.toLowerCase());
+    if(first[0]?.includes("term") || first[1]?.includes("def")){
+      startIndex = 1;
+    }
+  }
+
+  for(let i = startIndex; i < rows.length; i++){
+    const r = rows[i];
+
+    // skip incomplete rows
+    if(!r[0] || !r[1]) continue;
+
+    cleaned.push({
+      id: cleaned.length + 1,
+      term: r[0],
+      def: r[1],
+      bonus: Number(r[2]) || 1
+    });
+  }
+
+  cards = cleaned;
   remainingPool = [...cards];
+
+  console.log("CARDS LOADED:", cards);
 }
 
-// ================= TEAM SELECTION =================
+// ================= TEAM SELECT =================
 function showTeamSelection(){
   let container = document.getElementById("teamSelect");
 
@@ -231,10 +265,7 @@ function highlight(container, selected){
 }
 
 // ================= START GAME =================
-startBtn.textContent = "START GAME";
-startBtn.style.display = "none";
-
-startBtn.onclick = () => {
+function startGame(){
   scores = Array(teamCount).fill(0);
   currentTeam = 0;
 
@@ -243,7 +274,7 @@ startBtn.onclick = () => {
   fillBoard();
   renderBoard();
   updateScores();
-};
+}
 
 // ================= BOARD =================
 function fillBoard(){
@@ -318,7 +349,7 @@ function updateScores(){
   });
 }
 
-// ================= INIT =================
+// ================= INIT SCREEN =================
 overlayText.innerHTML = `
 <h1>GEOMETRY MATCH</h1>
 
@@ -336,7 +367,7 @@ Load Questions
 </button>
 
 <div style="margin-top:10px;font-size:13px;color:#aaa">
-Make sure sheet is published as CSV
+Must be "Publish to web → CSV"
 </div>
 `;
 
