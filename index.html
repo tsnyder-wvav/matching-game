@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Geometry Match</title>
+<title>Auto Match</title>
 
 <style>
 body {
@@ -14,23 +14,25 @@ body {
   overflow: hidden;
 }
 
-/* HUD */
+/* ================= HUD ================= */
 #hud {
   display: flex;
   justify-content: space-between;
   padding: 12px 18px;
   background: rgba(0,0,0,0.85);
   border-bottom: 2px solid rgb(22, 54, 219);
+  backdrop-filter: blur(10px);
 }
 
 #timerBox {
   padding: 8px 14px;
   border-radius: 10px;
-  background: rgba(22,54,219,0.1);
-  border: 1px solid rgba(22,54,219,0.5);
+  border: 1px solid rgba(22, 54, 219, 0.5);
+  background: rgba(22, 54, 219, 0.1);
   font-weight: bold;
 }
 
+/* ================= SCOREBOARD ================= */
 #hudRight {
   display: flex;
   gap: 10px;
@@ -39,20 +41,25 @@ body {
 .teamScore {
   padding: 6px 10px;
   border-radius: 8px;
+  font-size: 16px;
+  border: 1px solid rgba(22, 54, 219, 0.3);
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(22,54,219,0.3);
 }
 
 .teamScore.active {
   border: 2px solid #d61e1e;
+  box-shadow: 0 0 12px rgba(214,30,30,0.8);
+  transform: scale(1.08);
 }
 
-/* BOARD */
+/* ================= BOARD ================= */
 #gameBoard {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
   padding: 15px;
+  max-width: 1280px;
+  margin: auto;
 }
 
 .card {
@@ -65,29 +72,37 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
+  font-size: 16px;
   cursor: pointer;
+  transition: 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 0 10px rgb(22,54,219);
+  transform: scale(1.03);
 }
 
 .card.selected {
   background: rgb(22,54,219);
 }
 
-/* OVERLAY */
+/* ================= OVERLAY ================= */
 #overlay {
   position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.97);
-  z-index: 999;
   text-align: center;
+  z-index: 999;
+  background: rgba(0,0,0,0.97);
 }
 
 #overlayText {
-  font-size: 20px;
+  font-size: 30px;
   margin-bottom: 20px;
-  min-height: 200px;
+  line-height: 1.4;
+  height: 550px;
 }
 
 #startBtn {
@@ -95,10 +110,11 @@ body {
   font-size: 18px;
   border: none;
   border-radius: 10px;
+  cursor: pointer;
   background: rgb(22,54,219);
   color: white;
-  cursor: pointer;
-  position: absolute;
+  font-weight: bold;
+  position:absolute;
   bottom: 25px;
   left: 50%;
   transform: translateX(-50%);
@@ -124,177 +140,94 @@ body {
 
 <script>
 
-let cards = [];
-let activePairs = [];
-let remainingPool = [];
+const cards = [
+  { id: 1, term: "Vehicle", def: "A machine used for transportation", bonus: 1 },
+  { id: 2, term: "Engine", def: "The part of a car that produces power", bonus: 1 },
+  { id: 3, term: "Transmission", def: "System that transfers power from engine to wheels", bonus: 1 },
+  { id: 4, term: "Brake", def: "System used to slow or stop a vehicle", bonus: 1 },
+  { id: 5, term: "Tire", def: "Rubber covering around a wheel", bonus: 1 },
+  { id: 6, term: "Wheel", def: "Circular part that rotates and supports the tire", bonus: 1 },
+  { id: 7, term: "Steering wheel", def: "Device used to control the direction of a car", bonus: 1 },
+  { id: 8, term: "Dashboard", def: "Panel that displays vehicle information", bonus: 1 },
+  { id: 9, term: "Gas tank", def: "Container that holds fuel for the vehicle", bonus: 1 },
+  { id: 10, term: "Fuel", def: "Energy source that powers the engine", bonus: 1 },
+  { id: 11, term: "Oil", def: "Lubricant that reduces engine friction", bonus: 1 },
+  { id: 12, term: "Battery", def: "Provides electrical power to start the car", bonus: 1 },
+  { id: 13, term: "Alternator", def: "Charges the battery while the engine runs", bonus: 1 },
+  { id: 14, term: "Radiator", def: "Cools the engine to prevent overheating", bonus: 1 },
+  { id: 15, term: "Exhaust", def: "System that removes gases from the engine", bonus: 1 },
+  { id: 16, term: "Muffler", def: "Reduces noise from the exhaust system", bonus: 1 },
+  { id: 17, term: "Suspension", def: "System that absorbs road shocks", bonus: 1 },
+  { id: 18, term: "Shock absorber", def: "Part that smooths out bumps in the road", bonus: 1 },
+  { id: 19, term: "Alignment", def: "Adjustment of wheel angles for proper driving", bonus: 1 },
+  { id: 20, term: "Speed", def: "How fast a vehicle is moving", bonus: 1 },
+  { id: 21, term: "Acceleration", def: "Increase in a vehicle’s speed", bonus: 1 },
+  { id: 22, term: "Brake pedal", def: "Pedal used to slow or stop the car", bonus: 1 },
+  { id: 23, term: "Gas pedal", def: "Pedal used to increase speed", bonus: 1 },
+  { id: 24, term: "Clutch", def: "Device that connects and disconnects engine power (manual cars)", bonus: 1 },
+  { id: 25, term: "Gear", def: "Part that controls speed and power ratio", bonus: 1 },
+  { id: 26, term: "Parking brake", def: "Brake used to keep a car stationary", bonus: 1 },
+  { id: 27, term: "Headlight", def: "Light at the front of a vehicle", bonus: 1 },
+  { id: 28, term: "Taillight", def: "Light at the rear of a vehicle", bonus: 1 },
+  { id: 29, term: "Turn signal", def: "Light indicating a turn or lane change", bonus: 1 },
 
-let board = document.getElementById("gameBoard");
-let overlay = document.getElementById("overlay");
-let overlayText = document.getElementById("overlayText");
-let startBtn = document.getElementById("startBtn");
+  { id: 30, term: "Windshield", def: "Front glass of a vehicle", bonus: 2 },
+  { id: 31, term: "Wiper", def: "Device that clears rain from windshield", bonus: 2 },
+  { id: 32, term: "Airbag", def: "Safety device that inflates during a crash", bonus: 2 },
+  { id: 33, term: "Seatbelt", def: "Safety strap that secures passengers", bonus: 2 },
+  { id: 34, term: "Horsepower", def: "Measurement of engine power", bonus: 2 },
+  { id: 35, term: "Torque", def: "Rotational force produced by the engine", bonus: 2 },
+  { id: 36, term: "Mileage", def: "Distance a vehicle travels per gallon of fuel (MPG)", bonus: 2 },
+  { id: 37, term: "Oil change", def: "Maintenance replacing old engine oil", bonus: 2 },
+
+  { id: 38, term: "Tire pressure", def: "Amount of air inside a tire", bonus: 3 },
+  { id: 39, term: "Coolant", def: "Fluid that helps regulate engine temperature", bonus: 3 },
+  { id: 40, term: "Check engine light", def: "Warning light for engine issues", bonus: 3 },
+  { id: 41, term: "Drivetrain", def: "System that delivers power to the wheels", bonus: 3 },
+  { id: 42, term: "Differential", def: "Device that allows wheels to rotate at different speeds", bonus: 3 }
+];
+
+const board = document.getElementById("gameBoard");
+const overlay = document.getElementById("overlay");
+const overlayText = document.getElementById("overlayText");
+const startBtn = document.getElementById("startBtn");
 
 let teamCount = 5;
 let scores = [];
+
 let currentTeam = 0;
 
+let timeLeft = 60 * 100;
+let timerInterval;
+
 let selectedCards = [];
+let activePairs = [];
+let remainingPool = [...cards]; // (cards NOT included as requested)
+
+let lastGuess = [];
 
 const MAX_PAIRS = 14;
 
-startBtn.textContent = "START GAME";
-startBtn.style.display = "none";
-startBtn.onclick = startGame;
-
-// ================= SHEET IMPORT =================
-function convertSheetUrl(url){
-  let match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if(!match) return null;
-
-  let id = match[1];
-  let gidMatch = url.match(/gid=(\d+)/);
-  let gid = gidMatch ? gidMatch[1] : "0";
-
-  return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
-}
-
-async function loadFromSheet(){
-  let url = document.getElementById("sheetInput").value.trim();
-  let csvUrl = convertSheetUrl(url);
-
-  if(!csvUrl){
-    overlayText.innerHTML += "<div style='color:red'>Invalid URL</div>";
-    return;
-  }
-
-  try {
-    let res = await fetch(csvUrl);
-    let text = await res.text();
-
-    parseCSV(text);
-
-    if(cards.length === 0){
-      throw new Error("No valid cards found");
-    }
-
-    overlayText.innerHTML = `
-      <h2 style="color:lime">Sheet Loaded ✔</h2>
-      <p>${cards.length} cards loaded</p>
-      <div id="teamSelect"></div>
-    `;
-
-    showTeamSelection();
-
-  } catch(e){
-    overlayText.innerHTML += "<div style='color:red'>Failed to load sheet</div>";
-  }
-}
-
-// ================= CSV PARSER (FIXED) =================
-function parseCSV(csv){
-  csv = csv.replace(/\r/g,"").trim();
-
-  const rows = csv
-    .split("\n")
-    .map(row => {
-      let cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-      return cols ? cols.map(c => c.replace(/"/g,"").trim()) : [];
-    });
-
-  let cleaned = [];
-
-  let startIndex = 0;
-
-  // skip header row
-  if(rows.length > 0){
-    const first = rows[0].map(v => v.toLowerCase());
-    if(first[0]?.includes("term") || first[1]?.includes("def")){
-      startIndex = 1;
-    }
-  }
-
-  for(let i = startIndex; i < rows.length; i++){
-    const r = rows[i];
-
-    // skip incomplete rows
-    if(!r[0] || !r[1]) continue;
-
-    cleaned.push({
-      id: cleaned.length + 1,
-      term: r[0],
-      def: r[1],
-      bonus: Number(r[2]) || 1
-    });
-  }
-
-  cards = cleaned;
-  remainingPool = [...cards];
-
-  console.log("CARDS LOADED:", cards);
-}
-
-// ================= TEAM SELECT =================
-function showTeamSelection(){
-  let container = document.getElementById("teamSelect");
-
-  for(let i=1;i<=5;i++){
-    let btn = document.createElement("button");
-    btn.textContent = i + " Teams";
-
-    btn.style.margin = "5px";
-    btn.style.padding = "10px";
-    btn.style.border = "none";
-    btn.style.borderRadius = "8px";
-    btn.style.background = "rgb(22,54,219)";
-    btn.style.color = "white";
-    btn.style.cursor = "pointer";
-
-    btn.onclick = () => {
-      teamCount = i;
-      startBtn.style.display = "inline-block";
-      highlight(container,i);
-    };
-
-    container.appendChild(btn);
-  }
-}
-
-function highlight(container, selected){
-  [...container.children].forEach((b,i)=>{
-    b.style.outline = (i===selected-1)?"3px solid gold":"none";
-  });
-}
-
-// ================= START GAME =================
-function startGame(){
-  scores = Array(teamCount).fill(0);
-  currentTeam = 0;
-
-  overlay.style.display = "none";
-
-  fillBoard();
-  renderBoard();
-  updateScores();
-}
+// ================= INIT =================
+fillBoard();
+renderBoard();
+showRules();
 
 // ================= BOARD =================
 function fillBoard(){
-  activePairs = [];
-  remainingPool = [...cards];
-
-  while(activePairs.length < Math.min(MAX_PAIRS, cards.length)){
-    let i = Math.floor(Math.random()*remainingPool.length);
+  while(activePairs.length < MAX_PAIRS && remainingPool.length){
+    let i = Math.floor(Math.random() * remainingPool.length);
     activePairs.push(remainingPool.splice(i,1)[0]);
   }
 }
 
 function renderBoard(){
-  board.innerHTML = "";
-
-  let deck = [];
+  board.innerHTML="";
+  let deck=[];
 
   activePairs.forEach(c=>{
-    deck.push({text:c.term,id:c.id,type:"term"});
-    deck.push({text:c.def,id:c.id,type:"def"});
+    deck.push({text:c.term, id:c.id, type:"term"});
+    deck.push({text:c.def, id:c.id, type:"def"});
   });
 
   deck.sort(()=>Math.random()-0.5);
@@ -303,74 +236,291 @@ function renderBoard(){
     let div=document.createElement("div");
     div.className="card";
     div.textContent=item.text;
+
     div.dataset.id=item.id;
     div.dataset.type=item.type;
 
     div.onclick=()=>handle(div);
     board.appendChild(div);
   });
+
+  updateScores();
 }
 
-// ================= GAME LOGIC =================
+// ================= CLICK =================
 function handle(card){
-  if(selectedCards.length>=2) return;
+  if(overlay.style.display==="flex")return;
+
+  if(card.classList.contains("selected")){
+    card.classList.remove("selected");
+    selectedCards = selectedCards.filter(c=>c!==card);
+    return;
+  }
+
+  if(selectedCards.length>=2)return;
 
   card.classList.add("selected");
   selectedCards.push(card);
 
-  if(selectedCards.length===2) check();
+  if(selectedCards.length===2)check();
 }
 
+// ================= CHECK =================
 function check(){
-  let [a,b]=selectedCards;
+  clearInterval(timerInterval);
 
-  if(a.dataset.id===b.dataset.id && a.dataset.type!==b.dataset.type){
-    scores[currentTeam]+=10;
+  const [a,b] = selectedCards;
+  lastGuess = [a.textContent, b.textContent];
+
+  let match =
+    a.dataset.id === b.dataset.id &&
+    a.dataset.type !== b.dataset.type;
+
+  let msg = "INCORRECT";
+
+  if(match){
+    const cardData = cards.find(c => c.id == a.dataset.id);
+
+    let basePoints = Math.max(1, Math.floor(timeLeft / 100));
+    let bonus = cardData.bonus || 1;
+    let finalPoints = basePoints * bonus;
+
+    scores[currentTeam] += finalPoints;
+
+    msg = bonus > 1
+      ? `${bonus}x BONUS! CORRECT +${finalPoints}`
+      : `CORRECT +${finalPoints}`;
+
+    activePairs = activePairs.filter(p => p.id != cardData.id);
+
+    if (checkGameOver()) return;
+
+    if (remainingPool.length > 0) {
+      let i = Math.floor(Math.random() * remainingPool.length);
+      activePairs.push(remainingPool.splice(i,1)[0]);
+    }
+
+    checkGameOver();
   }
 
   selectedCards=[];
   renderBoard();
+  next(msg);
+}
 
-  currentTeam=(currentTeam+1)%teamCount;
+// ================= GAME OVER =================
+function checkGameOver(){
+  if(activePairs.length === 0 && remainingPool.length === 0){
+
+    overlay.style.display = "flex";
+    overlay.style.background = "rgba(0,0,0,0.97)";
+
+    let sorted = scores
+      .map((s, i) => ({team: i + 1, score: s}))
+      .sort((a, b) => b.score - a.score);
+
+    let leaderboard = `
+      <div style="
+        margin: 20px auto;
+        padding: 15px;
+        width: 260px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 12px;
+        text-align: left;
+      ">
+        <div style="text-align:center; font-weight:bold; margin-bottom:10px; font-size:20px;">
+          FINAL LEADERBOARD
+        </div>
+    `;
+
+    sorted.forEach((t, i) => {
+      leaderboard += `
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          padding: 5px 0;
+          ${i === 0 ? "color:gold;font-weight:bold;" : ""}
+        ">
+          <span>${i + 1}. Team ${t.team}</span>
+          <span>${t.score}</span>
+        </div>
+      `;
+    });
+
+    leaderboard += `</div>`;
+
+    overlayText.innerHTML = `
+      <div style="font-size:54px;color:gold;font-weight:bold;">
+        GAME OVER
+      </div>
+      <br>
+      ${leaderboard}
+    `;
+
+    startBtn.textContent = "GAME OVER";
+    startBtn.disabled = true;
+    startBtn.style.opacity = "0.5";
+    startBtn.style.cursor = "not-allowed";
+
+    clearInterval(timerInterval);
+    return true;
+  }
+  return false;
+}
+
+// ================= TIMER =================
+function startTurn(){
+  overlay.style.display="none";
+
+  let seconds = getTurnTime();
+  timeLeft = seconds * 100;
+
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+
+    let s = Math.floor(timeLeft/100);
+    let cs = timeLeft%100;
+
+    document.getElementById("timer").textContent =
+      `${s}.${cs.toString().padStart(2,"0")}`;
+
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      next("TIME'S UP");
+    }
+  },10);
+}
+
+function getTurnTime(){
+  let baseSeconds = 60;
+  let reduction = Math.floor(scores[currentTeam] / 100) * 10;
+  let time = baseSeconds - reduction;
+  return Math.max(10, time);
+}
+
+// ================= NEXT =================
+function next(msg){
+  overlay.style.display="flex";
+
+  const nextTeam = (currentTeam + 1) % teamCount;
+
+  const isCorrect = msg.includes("CORRECT") && !msg.includes("INCORRECT");
+  const isWrong = msg === "INCORRECT" || msg === "TIME'S UP";
+
+  overlay.style.background =
+    isCorrect ? "#2ecc71" :
+    isWrong ? "#d61e1e" :
+    "rgba(0,0,0,0.97)";
+
+  overlayText.innerHTML = `
+    ${msg}
+    <br><br>
+    <div>
+      <b>Guess:</b><br>
+      ${lastGuess[0] || ""}<br>
+      ${lastGuess[1] || ""}
+    </div>
+    <br>
+    Team ${nextTeam + 1} is up next
+  `;
+
+  startBtn.textContent="START TURN";
+  startBtn.onclick=startTurn;
+
+  currentTeam = nextTeam;
   updateScores();
 }
 
 // ================= SCORES =================
 function updateScores(){
-  let hud=document.getElementById("hudRight");
+  const hud=document.getElementById("hudRight");
   hud.innerHTML="";
 
   scores.forEach((s,i)=>{
-    let d=document.createElement("div");
-    d.className="teamScore";
-    if(i===currentTeam) d.classList.add("active");
-    d.textContent=`TEAM ${i+1}: ${s}`;
-    hud.appendChild(d);
+    let div=document.createElement("div");
+    div.className="teamScore";
+    if(i===currentTeam)div.classList.add("active");
+    div.textContent=`TEAM ${i+1}: ${s}`;
+    hud.appendChild(div);
   });
 }
 
-// ================= INIT SCREEN =================
-overlayText.innerHTML = `
-<h1>GEOMETRY MATCH</h1>
+// ================= RULES + TEAM SELECT =================
+function showRules(){
+  overlay.style.display="flex";
+  overlay.style.background="rgba(0,0,0,0.97)";
 
-<p>Paste Google Sheets link:</p>
+  overlayText.innerHTML=`
+    <div style="font-size:54px;color:gold;font-weight:bold;">
+      AUTOMOTIVE MATCH
+    </div>
 
-<input id="sheetInput"
-style="width:80%;padding:10px;border-radius:8px;border:none;"
-placeholder="Published Google Sheets URL">
+    <br>
 
-<br><br>
+    🎯 1 guess per turn<br>
+    ⭐ Bonus cards multiply points<br>
+    🧠 Match terms with definitions<br>
 
-<button onclick="loadFromSheet()"
-style="padding:10px 20px;border:none;border-radius:8px;background:#1e90ff;color:white;">
-Load Questions
-</button>
+    <br><br>
 
-<div style="margin-top:10px;font-size:13px;color:#aaa">
-Must be "Publish to web → CSV"
-</div>
-`;
+    <div style="font-size:34px;color:white;font-weight:bold;">
+      SELECT NUMBER OF TEAMS
+    </div>
 
+    <br>
+
+    <div id="teamSelect" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"></div>
+  `;
+
+  startBtn.textContent="START GAME";
+  startBtn.style.display = "none";
+  startBtn.onclick=startGameSetup;
+
+  const container = document.getElementById("teamSelect");
+
+  container.innerHTML = "";
+
+  for(let i=1;i<=5;i++){
+    let btn = document.createElement("button");
+    btn.textContent = i + " Teams";
+
+    btn.style.padding="10px 14px";
+    btn.style.borderRadius="10px";
+    btn.style.border="none";
+    btn.style.cursor="pointer";
+    btn.style.fontWeight="bold";
+    btn.style.background="rgb(22,54,219)";
+    btn.style.color="white";
+
+    btn.onclick = () => {
+      teamCount = i;
+      highlightSelection(container, i);
+      startBtn.style.display = "inline-block";
+    };
+
+    container.appendChild(btn);
+  }
+}
+
+function highlightSelection(container, selected){
+  [...container.children].forEach((btn, i)=>{
+    btn.style.outline = (i === selected - 1)
+      ? "3px solid gold"
+      : "none";
+  });
+}
+
+// ================= START GAME =================
+function startGameSetup(){
+  scores = Array(teamCount).fill(0);
+  currentTeam = 0;
+
+  overlay.style.display="none";
+  updateScores();
+  startTurn();
+}
 </script>
 </body>
 </html>
