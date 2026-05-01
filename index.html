@@ -125,7 +125,7 @@ body {
 <body>
 
 <div id="hud">
-  <div id="timerBox">TIME <span id="timer">60.00</span></div>
+  <div id="timerBox">TIME <span id="timer">30.00</span></div>
   <div id="hudRight"></div>
 </div>
 
@@ -197,12 +197,12 @@ let scores = [];
 
 let currentTeam = 0;
 
-let timeLeft = 60 * 100;
+let timeLeft = 30 * 100;
 let timerInterval;
 
 let selectedCards = [];
 let activePairs = [];
-let remainingPool = [...cards]; // (cards NOT included as requested)
+let remainingPool = [...cards];
 
 let lastGuess = [];
 
@@ -276,7 +276,7 @@ function check(){
     a.dataset.id === b.dataset.id &&
     a.dataset.type !== b.dataset.type;
 
-  let msg = "INCORRECT";
+  let msg = "INCORRECT -10";
 
   if(match){
     const cardData = cards.find(c => c.id == a.dataset.id);
@@ -301,6 +301,8 @@ function check(){
     }
 
     checkGameOver();
+  } else {
+    scores[currentTeam] -= 10;
   }
 
   selectedCards=[];
@@ -372,8 +374,7 @@ function checkGameOver(){
 function startTurn(){
   overlay.style.display="none";
 
-  let seconds = getTurnTime();
-  timeLeft = seconds * 100;
+  timeLeft = 30 * 100;
 
   clearInterval(timerInterval);
 
@@ -388,16 +389,22 @@ function startTurn(){
 
     if(timeLeft<=0){
       clearInterval(timerInterval);
-      next("TIME'S UP");
+
+      scores[currentTeam] -= 10;
+
+      lastGuess = ["", ""];
+
+      selectedCards.forEach(card => {
+        card.classList.remove("selected");
+      });
+
+      selectedCards = [];
+
+      updateScores();
+
+      next("TIME'S UP -10");
     }
   },10);
-}
-
-function getTurnTime(){
-  let baseSeconds = 60;
-  let reduction = Math.floor(scores[currentTeam] / 100) * 10;
-  let time = baseSeconds - reduction;
-  return Math.max(10, time);
 }
 
 // ================= NEXT =================
@@ -406,8 +413,8 @@ function next(msg){
 
   const nextTeam = (currentTeam + 1) % teamCount;
 
-  const isCorrect = msg.includes("CORRECT") && !msg.includes("INCORRECT");
-  const isWrong = msg === "INCORRECT" || msg === "TIME'S UP";
+  const isCorrect = msg.includes("CORRECT") && !msg.includes("INCORRECT -10");
+  const isWrong = msg === "INCORRECT -10" || msg === "TIME'S UP -10";
 
   overlay.style.background =
     isCorrect ? "#2ecc71" :
@@ -461,6 +468,8 @@ function showRules(){
 
     🎯 1 guess per turn<br>
     ⭐ Bonus cards multiply points<br>
+    ❌ Incorrect answers lose 10 points<br>
+    ⏰ Running out of time loses 10 points<br>
     🧠 Match terms with definitions<br>
 
     <br><br>
