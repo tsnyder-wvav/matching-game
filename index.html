@@ -32,24 +32,12 @@ body {
   font-weight: bold;
 }
 
-/* ================= SCOREBOARD ================= */
-#hudRight {
-  display: flex;
-  gap: 10px;
-}
-
-.teamScore {
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 16px;
-  border: 1px solid rgba(22, 54, 219, 0.3);
-  background: rgba(255,255,255,0.05);
-}
-
-.teamScore.active {
-  border: 2px solid #d61e1e;
-  box-shadow: 0 0 12px rgba(214,30,30,0.8);
-  transform: scale(1.08);
+#scoreBox {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(22, 54, 219, 0.5);
+  background: rgba(22, 54, 219, 0.1);
+  font-weight: bold;
 }
 
 /* ================= BOARD ================= */
@@ -133,7 +121,7 @@ body {
 
 <div id="hud">
   <div id="timerBox">TIME <span id="timer">60.00</span></div>
-  <div id="hudRight"></div>
+  <div id="scoreBox">SCORE: <span id="score">0</span></div>
 </div>
 
 <div id="gameBoard"></div>
@@ -160,7 +148,18 @@ const cards = [
   { id: 11, term: "Toyota Corolla", img: "11.jpg", bonus: 1 },
   { id: 12, term: "Honda Civic", img: "12.jpg", bonus: 1 },
   { id: 13, term: "Hyundai Tucson", img: "13.jpg", bonus: 1 },
-  { id: 14, term: "Ford Explorer", img: "14.jpg", bonus: 1 }, { id: 15, term: "Nissan Rogue", img: "15.jpg", bonus: 1 }, { id: 16, term: "Jeep Grand Cherokee", img: "16.jpg", bonus: 1 }, { id: 17, term: "Chevrolet Trax", img: "17.jpg", bonus: 1 }, { id: 18, term: "Subaru Crosstrek", img: "18.jpg", bonus: 1 }, { id: 19, term: "Kia Sportage", img: "19.jpg", bonus: 1 }, { id: 20, term: "Subaru Forester", img: "20.jpg", bonus: 1 }, { id: 21, term: "Tesla Model 3", img: "21.jpg", bonus: 1 }, { id: 22, term: "Jeep Wrangler", img: "22.jpg", bonus: 1 }, { id: 23, term: "Ford Transit", img: "23.jpg", bonus: 1 }, { id: 24, term: "Subaru Outback", img: "24.jpg", bonus: 1 }, { id: 25, term: "Ford Maverick", img: "25.jpg", bonus: 1 }
+  { id: 14, term: "Ford Explorer", img: "14.jpg", bonus: 1 },
+  { id: 15, term: "Nissan Rogue", img: "15.jpg", bonus: 1 },
+  { id: 16, term: "Jeep Grand Cherokee", img: "16.jpg", bonus: 1 },
+  { id: 17, term: "Chevrolet Trax", img: "17.jpg", bonus: 1 },
+  { id: 18, term: "Subaru Crosstrek", img: "18.jpg", bonus: 1 },
+  { id: 19, term: "Kia Sportage", img: "19.jpg", bonus: 1 },
+  { id: 20, term: "Subaru Forester", img: "20.jpg", bonus: 1 },
+  { id: 21, term: "Tesla Model 3", img: "21.jpg", bonus: 1 },
+  { id: 22, term: "Jeep Wrangler", img: "22.jpg", bonus: 1 },
+  { id: 23, term: "Ford Transit", img: "23.jpg", bonus: 1 },
+  { id: 24, term: "Subaru Outback", img: "24.jpg", bonus: 1 },
+  { id: 25, term: "Ford Maverick", img: "25.jpg", bonus: 1 }
 ];
 
 const board = document.getElementById("gameBoard");
@@ -168,16 +167,12 @@ const overlay = document.getElementById("overlay");
 const overlayText = document.getElementById("overlayText");
 const startBtn = document.getElementById("startBtn");
 
-let teamCount = 5;
-let scores = [];
-let currentTeam = 0;
-
+let score = 0;
 let timeLeft = 60 * 100;
 let timerInterval;
 
 let selectedCards = [];
 let activePairs = [...cards];
-let lastGuess = [];
 
 const MAX_PAIRS = 14;
 
@@ -221,8 +216,6 @@ function renderBoard(){
     div.onclick=()=>handle(div);
     board.appendChild(div);
   });
-
-  updateScores();
 }
 
 // ================= CLICK =================
@@ -249,11 +242,6 @@ function check(){
 
   const [a,b]=selectedCards;
 
-  lastGuess=[
-    a.dataset.type==="image"?"[IMAGE]":a.textContent,
-    b.dataset.type==="image"?"[IMAGE]":b.textContent
-  ];
-
   let match=a.dataset.id===b.dataset.id && a.dataset.type!==b.dataset.type;
 
   let msg="INCORRECT";
@@ -263,7 +251,9 @@ function check(){
     let basePoints=Math.max(1,Math.floor(timeLeft/100));
     let finalPoints=basePoints*(cardData.bonus||1);
 
-    scores[currentTeam]+=finalPoints;
+    score += finalPoints;
+    document.getElementById("score").textContent = score;
+
     msg=`CORRECT +${finalPoints}`;
 
     activePairs=activePairs.filter(p=>p.id!=cardData.id);
@@ -281,30 +271,11 @@ function next(msg){
   overlayText.innerHTML=`
     ${msg}
     <br><br>
-    ${lastGuess.join("<br>")}
-    <br><br>
-    Team ${((currentTeam+1)%teamCount)+1} is next
+    NEXT ROUND
   `;
 
   startBtn.textContent="START TURN";
   startBtn.onclick=startTurn;
-
-  currentTeam=(currentTeam+1)%teamCount;
-  updateScores();
-}
-
-// ================= SCORES =================
-function updateScores(){
-  let hud=document.getElementById("hudRight");
-  hud.innerHTML="";
-
-  scores.forEach((s,i)=>{
-    let div=document.createElement("div");
-    div.className="teamScore";
-    if(i===currentTeam)div.classList.add("active");
-    div.textContent=`TEAM ${i+1}: ${s}`;
-    hud.appendChild(div);
-  });
 }
 
 // ================= RULES =================
@@ -312,16 +283,16 @@ function showRules(){
   overlay.style.display="flex";
   overlayText.innerHTML=`
     <h1>VEHICLE MATCH</h1>
-    Match the vehicle name to the image<br><br>
+    Match the 25 best selling vehicle of 2025 to their image<br><br>
   `;
   startBtn.textContent="START GAME";
   startBtn.onclick=startGame;
 }
 
 function startGame(){
-  scores=Array(teamCount).fill(0);
+  score=0;
+  document.getElementById("score").textContent=score;
   overlay.style.display="none";
-  updateScores();
   startTurn();
 }
 
@@ -343,5 +314,6 @@ function startTurn(){
   },10);
 }
 </script>
+
 </body>
 </html>
