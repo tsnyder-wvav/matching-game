@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Auto Match</title>
+<title>Geometry Match</title>
 
 <style>
 body {
@@ -72,7 +72,7 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   transition: 0.2s;
 }
@@ -84,6 +84,13 @@ body {
 
 .card.selected {
   background: rgb(22,54,219);
+}
+
+.card img {
+  max-width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 /* ================= OVERLAY ================= */
@@ -125,7 +132,7 @@ body {
 <body>
 
 <div id="hud">
-  <div id="timerBox">TIME <span id="timer">30.00</span></div>
+  <div id="timerBox">TIME <span id="timer">60.00</span></div>
   <div id="hudRight"></div>
 </div>
 
@@ -139,52 +146,32 @@ body {
 </div>
 
 <script>
-
 const cards = [
-  { id: 1, term: "Vehicle", def: "A machine used for transportation", bonus: 1 },
-  { id: 2, term: "Engine", def: "The part of a car that produces power", bonus: 1 },
-  { id: 3, term: "Transmission", def: "System that transfers power from engine to wheels", bonus: 1 },
-  { id: 4, term: "Brake", def: "System used to slow or stop a vehicle", bonus: 1 },
-  { id: 5, term: "Tire", def: "Rubber covering around a wheel", bonus: 1 },
-  { id: 6, term: "Wheel", def: "Circular part that rotates and supports the tire", bonus: 1 },
-  { id: 7, term: "Steering wheel", def: "Device used to control the direction of a car", bonus: 1 },
-  { id: 8, term: "Dashboard", def: "Panel that displays vehicle information", bonus: 1 },
-  { id: 9, term: "Gas tank", def: "Container that holds fuel for the vehicle", bonus: 1 },
-  { id: 10, term: "Fuel", def: "Energy source that powers the engine", bonus: 1 },
-  { id: 11, term: "Oil", def: "Lubricant that reduces engine friction", bonus: 1 },
-  { id: 12, term: "Battery", def: "Provides electrical power to start the car", bonus: 1 },
-  { id: 13, term: "Alternator", def: "Charges the battery while the engine runs", bonus: 1 },
-  { id: 14, term: "Radiator", def: "Cools the engine to prevent overheating", bonus: 1 },
-  { id: 15, term: "Exhaust", def: "System that removes gases from the engine", bonus: 1 },
-  { id: 16, term: "Muffler", def: "Reduces noise from the exhaust system", bonus: 1 },
-  { id: 17, term: "Suspension", def: "System that absorbs road shocks", bonus: 1 },
-  { id: 18, term: "Shock absorber", def: "Part that smooths out bumps in the road", bonus: 1 },
-  { id: 19, term: "Alignment", def: "Adjustment of wheel angles for proper driving", bonus: 1 },
-  { id: 20, term: "Speed", def: "How fast a vehicle is moving", bonus: 1 },
-  { id: 21, term: "Acceleration", def: "Increase in a vehicle’s speed", bonus: 1 },
-  { id: 22, term: "Brake pedal", def: "Pedal used to slow or stop the car", bonus: 1 },
-  { id: 23, term: "Gas pedal", def: "Pedal used to increase speed", bonus: 1 },
-  { id: 24, term: "Clutch", def: "Device that connects and disconnects engine power (manual cars)", bonus: 1 },
-  { id: 25, term: "Gear", def: "Part that controls speed and power ratio", bonus: 1 },
-  { id: 26, term: "Parking brake", def: "Brake used to keep a car stationary", bonus: 1 },
-  { id: 27, term: "Headlight", def: "Light at the front of a vehicle", bonus: 1 },
-  { id: 28, term: "Taillight", def: "Light at the rear of a vehicle", bonus: 1 },
-  { id: 29, term: "Turn signal", def: "Light indicating a turn or lane change", bonus: 1 },
-
-  { id: 30, term: "Windshield", def: "Front glass of a vehicle", bonus: 2 },
-  { id: 31, term: "Wiper", def: "Device that clears rain from windshield", bonus: 2 },
-  { id: 32, term: "Airbag", def: "Safety device that inflates during a crash", bonus: 2 },
-  { id: 33, term: "Seatbelt", def: "Safety strap that secures passengers", bonus: 2 },
-  { id: 34, term: "Horsepower", def: "Measurement of engine power", bonus: 2 },
-  { id: 35, term: "Torque", def: "Rotational force produced by the engine", bonus: 2 },
-  { id: 36, term: "Mileage", def: "Distance a vehicle travels per gallon of fuel (MPG)", bonus: 2 },
-  { id: 37, term: "Oil change", def: "Maintenance replacing old engine oil", bonus: 2 },
-
-  { id: 38, term: "Tire pressure", def: "Amount of air inside a tire", bonus: 3 },
-  { id: 39, term: "Coolant", def: "Fluid that helps regulate engine temperature", bonus: 3 },
-  { id: 40, term: "Check engine light", def: "Warning light for engine issues", bonus: 3 },
-  { id: 41, term: "Drivetrain", def: "System that delivers power to the wheels", bonus: 3 },
-  { id: 42, term: "Differential", def: "Device that allows wheels to rotate at different speeds", bonus: 3 }
+  { id: 1, term: "Ford F-Series Pickup", img: "/images/1.jpg", bonus: 1 },
+  { id: 2, term: "Chevrolet Silverado Pickup", img: "/images/2.jpg", bonus: 1 },
+  { id: 3, term: "Toyota RAV4", img: "/images/3.jpg", bonus: 1 },
+  { id: 4, term: "Honda CR-V", img: "/images/4.jpg", bonus: 1 },
+  { id: 5, term: "Ram Pickup", img: "/images/5.jpg", bonus: 1 },
+  { id: 6, term: "GMC Sierra", img: "/images/6.jpg", bonus: 1 },
+  { id: 7, term: "Chevrolet Equinox", img: "/images/7.jpg", bonus: 1 },
+  { id: 8, term: "Tesla Model Y", img: "/images/8.jpg", bonus: 1 },
+  { id: 9, term: "Toyota Camry", img: "/images/9.jpg", bonus: 1 },
+  { id: 10, term: "Toyota Tacoma", img: "/images/10.jpg", bonus: 1 },
+  { id: 11, term: "Toyota Corolla", img: "/images/11.jpg", bonus: 1 },
+  { id: 12, term: "Honda Civic", img: "/images/12.jpg", bonus: 1 },
+  { id: 13, term: "Hyundai Tucson", img: "/images/13.jpg", bonus: 1 },
+  { id: 14, term: "Ford Explorer", img: "/images/14.jpg", bonus: 1 },
+  { id: 15, term: "Nissan Rogue", img: "/images/15.jpg", bonus: 1 },
+  { id: 16, term: "Jeep Grand Cherokee", img: "/images/16.jpg", bonus: 1 },
+  { id: 17, term: "Chevrolet Trax", img: "/images/17.jpg", bonus: 1 },
+  { id: 18, term: "Subaru Crosstrek", img: "/images/18.jpg", bonus: 1 },
+  { id: 19, term: "Kia Sportage", img: "/images/19.jpg", bonus: 1 },
+  { id: 20, term: "Subaru Forester", img: "/images/20.jpg", bonus: 1 },
+  { id: 21, term: "Tesla Model 3", img: "/images/21.jpg", bonus: 1 },
+  { id: 22, term: "Jeep Wrangler", img: "/images/22.jpg", bonus: 1 },
+  { id: 23, term: "Ford Transit", img: "/images/23.jpg", bonus: 1 },
+  { id: 24, term: "Subaru Outback", img: "/images/24.jpg", bonus: 1 },
+  { id: 25, term: "Ford Maverick", img: "/images/25.jpg", bonus: 1 }
 ];
 
 const board = document.getElementById("gameBoard");
@@ -194,16 +181,13 @@ const startBtn = document.getElementById("startBtn");
 
 let teamCount = 5;
 let scores = [];
-
 let currentTeam = 0;
 
-let timeLeft = 30 * 100;
+let timeLeft = 60 * 100;
 let timerInterval;
 
 let selectedCards = [];
-let activePairs = [];
-let remainingPool = [...cards];
-
+let activePairs = [...cards];
 let lastGuess = [];
 
 const MAX_PAIRS = 14;
@@ -215,9 +199,9 @@ showRules();
 
 // ================= BOARD =================
 function fillBoard(){
-  while(activePairs.length < MAX_PAIRS && remainingPool.length){
-    let i = Math.floor(Math.random() * remainingPool.length);
-    activePairs.push(remainingPool.splice(i,1)[0]);
+  activePairs = cards.slice();
+  while(activePairs.length > MAX_PAIRS){
+    activePairs.splice(Math.floor(Math.random()*activePairs.length),1);
   }
 }
 
@@ -226,8 +210,8 @@ function renderBoard(){
   let deck=[];
 
   activePairs.forEach(c=>{
-    deck.push({text:c.term, id:c.id, type:"term"});
-    deck.push({text:c.def, id:c.id, type:"def"});
+    deck.push({content:c.term,id:c.id,type:"term"});
+    deck.push({content:c.img,id:c.id,type:"image"});
   });
 
   deck.sort(()=>Math.random()-0.5);
@@ -235,10 +219,15 @@ function renderBoard(){
   deck.forEach(item=>{
     let div=document.createElement("div");
     div.className="card";
-    div.textContent=item.text;
 
     div.dataset.id=item.id;
     div.dataset.type=item.type;
+
+    if(item.type==="image"){
+      div.innerHTML=`<img src="${item.content}">`;
+    } else {
+      div.textContent=item.content;
+    }
 
     div.onclick=()=>handle(div);
     board.appendChild(div);
@@ -269,40 +258,26 @@ function handle(card){
 function check(){
   clearInterval(timerInterval);
 
-  const [a,b] = selectedCards;
-  lastGuess = [a.textContent, b.textContent];
+  const [a,b]=selectedCards;
 
-  let match =
-    a.dataset.id === b.dataset.id &&
-    a.dataset.type !== b.dataset.type;
+  lastGuess=[
+    a.dataset.type==="image"?"[IMAGE]":a.textContent,
+    b.dataset.type==="image"?"[IMAGE]":b.textContent
+  ];
 
-  let msg = "INCORRECT -10";
+  let match=a.dataset.id===b.dataset.id && a.dataset.type!==b.dataset.type;
+
+  let msg="INCORRECT";
 
   if(match){
-    const cardData = cards.find(c => c.id == a.dataset.id);
+    let cardData=cards.find(c=>c.id==a.dataset.id);
+    let basePoints=Math.max(1,Math.floor(timeLeft/100));
+    let finalPoints=basePoints*(cardData.bonus||1);
 
-    let basePoints = Math.max(1, Math.floor(timeLeft / 100));
-    let bonus = cardData.bonus || 1;
-    let finalPoints = basePoints * bonus;
+    scores[currentTeam]+=finalPoints;
+    msg=`CORRECT +${finalPoints}`;
 
-    scores[currentTeam] += finalPoints;
-
-    msg = bonus > 1
-      ? `${bonus}x BONUS! CORRECT +${finalPoints}`
-      : `CORRECT +${finalPoints}`;
-
-    activePairs = activePairs.filter(p => p.id != cardData.id);
-
-    if (checkGameOver()) return;
-
-    if (remainingPool.length > 0) {
-      let i = Math.floor(Math.random() * remainingPool.length);
-      activePairs.push(remainingPool.splice(i,1)[0]);
-    }
-
-    checkGameOver();
-  } else {
-    scores[currentTeam] -= 10;
+    activePairs=activePairs.filter(p=>p.id!=cardData.id);
   }
 
   selectedCards=[];
@@ -310,139 +285,28 @@ function check(){
   next(msg);
 }
 
-// ================= GAME OVER =================
-function checkGameOver(){
-  if(activePairs.length === 0 && remainingPool.length === 0){
-
-    overlay.style.display = "flex";
-    overlay.style.background = "rgba(0,0,0,0.97)";
-
-    let sorted = scores
-      .map((s, i) => ({team: i + 1, score: s}))
-      .sort((a, b) => b.score - a.score);
-
-    let leaderboard = `
-      <div style="
-        margin: 20px auto;
-        padding: 15px;
-        width: 260px;
-        background: rgba(255,255,255,0.08);
-        border-radius: 12px;
-        text-align: left;
-      ">
-        <div style="text-align:center; font-weight:bold; margin-bottom:10px; font-size:20px;">
-          FINAL LEADERBOARD
-        </div>
-    `;
-
-    sorted.forEach((t, i) => {
-      leaderboard += `
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          padding: 5px 0;
-          ${i === 0 ? "color:gold;font-weight:bold;" : ""}
-        ">
-          <span>${i + 1}. Team ${t.team}</span>
-          <span>${t.score}</span>
-        </div>
-      `;
-    });
-
-    leaderboard += `</div>`;
-
-    overlayText.innerHTML = `
-      <div style="font-size:54px;color:gold;font-weight:bold;">
-        GAME OVER
-      </div>
-      <br>
-      ${leaderboard}
-    `;
-
-    startBtn.textContent = "GAME OVER";
-    startBtn.disabled = true;
-    startBtn.style.opacity = "0.5";
-    startBtn.style.cursor = "not-allowed";
-
-    clearInterval(timerInterval);
-    return true;
-  }
-  return false;
-}
-
-// ================= TIMER =================
-function startTurn(){
-  overlay.style.display="none";
-
-  timeLeft = 30 * 100;
-
-  clearInterval(timerInterval);
-
-  timerInterval = setInterval(()=>{
-    timeLeft--;
-
-    let s = Math.floor(timeLeft/100);
-    let cs = timeLeft%100;
-
-    document.getElementById("timer").textContent =
-      `${s}.${cs.toString().padStart(2,"0")}`;
-
-    if(timeLeft<=0){
-      clearInterval(timerInterval);
-
-      scores[currentTeam] -= 10;
-
-      lastGuess = ["", ""];
-
-      selectedCards.forEach(card => {
-        card.classList.remove("selected");
-      });
-
-      selectedCards = [];
-
-      updateScores();
-
-      next("TIME'S UP -10");
-    }
-  },10);
-}
-
 // ================= NEXT =================
 function next(msg){
   overlay.style.display="flex";
 
-  const nextTeam = (currentTeam + 1) % teamCount;
-
-  const isCorrect = msg.includes("CORRECT") && !msg.includes("INCORRECT -10");
-  const isWrong = msg === "INCORRECT -10" || msg === "TIME'S UP -10";
-
-  overlay.style.background =
-    isCorrect ? "#2ecc71" :
-    isWrong ? "#d61e1e" :
-    "rgba(0,0,0,0.97)";
-
-  overlayText.innerHTML = `
+  overlayText.innerHTML=`
     ${msg}
     <br><br>
-    <div>
-      <b>Guess:</b><br>
-      ${lastGuess[0] || ""}<br>
-      ${lastGuess[1] || ""}
-    </div>
-    <br>
-    Team ${nextTeam + 1} is up next
+    ${lastGuess.join("<br>")}
+    <br><br>
+    Team ${((currentTeam+1)%teamCount)+1} is next
   `;
 
   startBtn.textContent="START TURN";
   startBtn.onclick=startTurn;
 
-  currentTeam = nextTeam;
+  currentTeam=(currentTeam+1)%teamCount;
   updateScores();
 }
 
 // ================= SCORES =================
 function updateScores(){
-  const hud=document.getElementById("hudRight");
+  let hud=document.getElementById("hudRight");
   hud.innerHTML="";
 
   scores.forEach((s,i)=>{
@@ -454,81 +318,40 @@ function updateScores(){
   });
 }
 
-// ================= RULES + TEAM SELECT =================
+// ================= RULES =================
 function showRules(){
   overlay.style.display="flex";
-  overlay.style.background="rgba(0,0,0,0.97)";
-
   overlayText.innerHTML=`
-    <div style="font-size:54px;color:gold;font-weight:bold;">
-      AUTOMOTIVE MATCH
-    </div>
-
-    <br>
-
-    🎯 1 guess per turn<br>
-    ⭐ Bonus cards multiply points<br>
-    ❌ Incorrect answers lose 10 points<br>
-    ⏰ Running out of time loses 10 points<br>
-    🧠 Match terms with definitions<br>
-
-    <br><br>
-
-    <div style="font-size:34px;color:white;font-weight:bold;">
-      SELECT NUMBER OF TEAMS
-    </div>
-
-    <br>
-
-    <div id="teamSelect" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"></div>
+    <h1>VEHICLE MATCH</h1>
+    Match the vehicle name to the image<br><br>
   `;
-
   startBtn.textContent="START GAME";
-  startBtn.style.display = "none";
-  startBtn.onclick=startGameSetup;
-
-  const container = document.getElementById("teamSelect");
-
-  container.innerHTML = "";
-
-  for(let i=1;i<=5;i++){
-    let btn = document.createElement("button");
-    btn.textContent = i + " Teams";
-
-    btn.style.padding="10px 14px";
-    btn.style.borderRadius="10px";
-    btn.style.border="none";
-    btn.style.cursor="pointer";
-    btn.style.fontWeight="bold";
-    btn.style.background="rgb(22,54,219)";
-    btn.style.color="white";
-
-    btn.onclick = () => {
-      teamCount = i;
-      highlightSelection(container, i);
-      startBtn.style.display = "inline-block";
-    };
-
-    container.appendChild(btn);
-  }
+  startBtn.onclick=startGame;
 }
 
-function highlightSelection(container, selected){
-  [...container.children].forEach((btn, i)=>{
-    btn.style.outline = (i === selected - 1)
-      ? "3px solid gold"
-      : "none";
-  });
-}
-
-// ================= START GAME =================
-function startGameSetup(){
-  scores = Array(teamCount).fill(0);
-  currentTeam = 0;
-
+function startGame(){
+  scores=Array(teamCount).fill(0);
   overlay.style.display="none";
   updateScores();
   startTurn();
+}
+
+// ================= TIMER =================
+function startTurn(){
+  overlay.style.display="none";
+  clearInterval(timerInterval);
+
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    let s=Math.floor(timeLeft/100);
+    let cs=timeLeft%100;
+    document.getElementById("timer").textContent=`${s}.${cs}`;
+
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      next("TIME'S UP");
+    }
+  },10);
 }
 </script>
 </body>
