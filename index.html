@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Matching Game</title>
+<title>Vehicle Match</title>
 
 <style>
 body {
@@ -24,14 +24,7 @@ body {
   backdrop-filter: blur(10px);
 }
 
-#timerBox {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(22, 54, 219, 0.5);
-  background: rgba(22, 54, 219, 0.1);
-  font-weight: bold;
-}
-
+#timerBox,
 #scoreBox {
   padding: 8px 14px;
   border-radius: 10px;
@@ -97,7 +90,8 @@ body {
   font-size: 30px;
   margin-bottom: 20px;
   line-height: 1.4;
-  height: 550px;
+  max-width: 900px;
+  padding: 20px;
 }
 
 #startBtn {
@@ -109,10 +103,6 @@ body {
   background: rgb(22,54,219);
   color: white;
   font-weight: bold;
-  position:absolute;
-  bottom: 25px;
-  left: 50%;
-  transform: translateX(-50%);
 }
 </style>
 </head>
@@ -120,8 +110,13 @@ body {
 <body>
 
 <div id="hud">
-  <div id="timerBox">TIME <span id="timer">60.00</span></div>
-  <div id="scoreBox">SCORE: <span id="score">0</span></div>
+  <div id="timerBox">
+    TIME <span id="timer">60.00</span>
+  </div>
+
+  <div id="scoreBox">
+    SCORE: <span id="score">0</span>
+  </div>
 </div>
 
 <div id="gameBoard"></div>
@@ -168,150 +163,268 @@ const overlayText = document.getElementById("overlayText");
 const startBtn = document.getElementById("startBtn");
 
 let score = 0;
+
 let timeLeft = 60 * 100;
 let timerInterval;
 
 let selectedCards = [];
-let activePairs = [...cards];
+
+let remainingCards = [...cards];
+let activePairs = [];
+
+let matchedCount = 0;
 
 const MAX_PAIRS = 14;
 
-// ================= INIT =================
-fillBoard();
-renderBoard();
+/* ================= INIT ================= */
 showRules();
 
-// ================= BOARD =================
+/* ================= FILL BOARD ================= */
 function fillBoard(){
-  activePairs = cards.slice();
-  while(activePairs.length > MAX_PAIRS){
-    activePairs.splice(Math.floor(Math.random()*activePairs.length),1);
+  activePairs = [];
+
+  while(activePairs.length < MAX_PAIRS && remainingCards.length > 0){
+    let index = Math.floor(Math.random() * remainingCards.length);
+
+    activePairs.push(remainingCards[index]);
+
+    remainingCards.splice(index,1);
   }
 }
 
+/* ================= RENDER ================= */
 function renderBoard(){
-  board.innerHTML="";
-  let deck=[];
+  board.innerHTML = "";
+
+  let deck = [];
 
   activePairs.forEach(c=>{
-    deck.push({content:c.term,id:c.id,type:"term"});
-    deck.push({content:c.img,id:c.id,type:"image"});
+    deck.push({
+      content:c.term,
+      id:c.id,
+      type:"term"
+    });
+
+    deck.push({
+      content:c.img,
+      id:c.id,
+      type:"image"
+    });
   });
 
   deck.sort(()=>Math.random()-0.5);
 
   deck.forEach(item=>{
-    let div=document.createElement("div");
-    div.className="card";
+    let div = document.createElement("div");
 
-    div.dataset.id=item.id;
-    div.dataset.type=item.type;
+    div.className = "card";
+
+    div.dataset.id = item.id;
+    div.dataset.type = item.type;
 
     if(item.type==="image"){
-      div.innerHTML=`<img src="${item.content}">`;
+      div.innerHTML = `<img src="${item.content}">`;
     } else {
-      div.textContent=item.content;
+      div.textContent = item.content;
     }
 
-    div.onclick=()=>handle(div);
+    div.onclick = ()=>handle(div);
+
     board.appendChild(div);
   });
 }
 
-// ================= CLICK =================
+/* ================= CLICK ================= */
 function handle(card){
-  if(overlay.style.display==="flex")return;
+
+  if(overlay.style.display==="flex") return;
 
   if(card.classList.contains("selected")){
     card.classList.remove("selected");
+
     selectedCards = selectedCards.filter(c=>c!==card);
+
     return;
   }
 
-  if(selectedCards.length>=2)return;
+  if(selectedCards.length>=2) return;
 
   card.classList.add("selected");
+
   selectedCards.push(card);
 
-  if(selectedCards.length===2)check();
+  if(selectedCards.length===2){
+    check();
+  }
 }
 
-// ================= CHECK =================
+/* ================= CHECK ================= */
 function check(){
+
   clearInterval(timerInterval);
 
-  const [a,b]=selectedCards;
+  const [a,b] = selectedCards;
 
-  let match=a.dataset.id===b.dataset.id && a.dataset.type!==b.dataset.type;
+  let match =
+    a.dataset.id===b.dataset.id &&
+    a.dataset.type!==b.dataset.type;
 
-  let msg="INCORRECT";
+  let msg = "INCORRECT";
 
   if(match){
-    let cardData=cards.find(c=>c.id==a.dataset.id);
-    let basePoints=Math.max(1,Math.floor(timeLeft/100));
-    let finalPoints=basePoints*(cardData.bonus||1);
+
+    let cardData =
+      cards.find(c=>c.id==a.dataset.id);
+
+    let basePoints =
+      Math.max(1,Math.floor(timeLeft/100));
+
+    let finalPoints =
+      basePoints*(cardData.bonus||1);
 
     score += finalPoints;
+
     document.getElementById("score").textContent = score;
 
-    msg=`CORRECT +${finalPoints}`;
+    msg = `CORRECT +${finalPoints}`;
 
-    activePairs=activePairs.filter(p=>p.id!=cardData.id);
+    activePairs =
+      activePairs.filter(p=>p.id!=cardData.id);
+
+    matchedCount++;
+
+    if(remainingCards.length > 0){
+
+      let index =
+        Math.floor(Math.random()*remainingCards.length);
+
+      activePairs.push(remainingCards[index]);
+
+      remainingCards.splice(index,1);
+    }
   }
 
-  selectedCards=[];
+  selectedCards = [];
+
   renderBoard();
-  next(msg);
+
+  if(matchedCount >= cards.length){
+    endGame();
+  } else {
+    next(msg);
+  }
 }
 
-// ================= NEXT =================
+/* ================= NEXT ================= */
 function next(msg){
-  overlay.style.display="flex";
 
-  overlayText.innerHTML=`
+  overlay.style.display = "flex";
+
+  overlayText.innerHTML = `
     ${msg}
     <br><br>
-    NEXT ROUND
+    ${matchedCount} / ${cards.length} MATCHES COMPLETE
   `;
 
-  startBtn.textContent="START TURN";
-  startBtn.onclick=startTurn;
+  startBtn.textContent = "CONTINUE";
+
+  startBtn.onclick = startTurn;
 }
 
-// ================= RULES =================
+/* ================= RULES ================= */
 function showRules(){
-  overlay.style.display="flex";
-  overlayText.innerHTML=`
+
+  overlay.style.display = "flex";
+
+  overlayText.innerHTML = `
     <h1>VEHICLE MATCH</h1>
-    Match the 25 best selling vehicle of 2025 to their image<br><br>
+
+    Match the 25 best selling vehicles of 2025
+    to their image.
+
+    <br><br>
+
+    Only 14 vehicle pairs appear at a time.
+    Each correct match brings in a new vehicle.
   `;
-  startBtn.textContent="START GAME";
-  startBtn.onclick=startGame;
+
+  startBtn.textContent = "START GAME";
+
+  startBtn.onclick = startGame;
 }
 
+/* ================= START ================= */
 function startGame(){
-  score=0;
-  document.getElementById("score").textContent=score;
-  overlay.style.display="none";
+
+  score = 0;
+
+  matchedCount = 0;
+
+  timeLeft = 60 * 100;
+
+  remainingCards = [...cards];
+
+  fillBoard();
+
+  document.getElementById("score").textContent = score;
+
+  renderBoard();
+
+  overlay.style.display = "none";
+
   startTurn();
 }
 
-// ================= TIMER =================
+/* ================= TIMER ================= */
 function startTurn(){
-  overlay.style.display="none";
+
+  overlay.style.display = "none";
+
   clearInterval(timerInterval);
 
-  timerInterval=setInterval(()=>{
+  timerInterval = setInterval(()=>{
+
     timeLeft--;
-    let s=Math.floor(timeLeft/100);
-    let cs=timeLeft%100;
-    document.getElementById("timer").textContent=`${s}.${cs}`;
+
+    let s = Math.floor(timeLeft/100);
+
+    let cs = timeLeft%100;
+
+    document.getElementById("timer").textContent =
+      `${s}.${cs.toString().padStart(2,"0")}`;
 
     if(timeLeft<=0){
+
       clearInterval(timerInterval);
-      next("TIME'S UP");
+
+      endGame();
     }
+
   },10);
+}
+
+/* ================= END ================= */
+function endGame(){
+
+  clearInterval(timerInterval);
+
+  overlay.style.display = "flex";
+
+  overlayText.innerHTML = `
+    <h1>GAME COMPLETE</h1>
+
+    You matched ${matchedCount} of ${cards.length} vehicles.
+
+    <br><br>
+
+    FINAL SCORE: ${score}
+  `;
+
+  startBtn.textContent = "PLAY AGAIN";
+
+  startBtn.onclick = ()=>{
+    location.reload();
+  };
 }
 </script>
 
